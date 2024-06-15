@@ -6,6 +6,7 @@
 build
 logs
 
+avro-tools*.jar
 *.iml
 
 .DS_Store
