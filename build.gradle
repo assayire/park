@@ -1,0 +1,42 @@
+plugins {
+  id 'java'
+}
+
+group = 'park'
+version = '1.0-SNAPSHOT'
+
+sourceSets {
+  main {
+    java {
+      srcDirs += 'build/generated'
+    }
+  }
+}
+
+dependencies {
+  implementation 'org.apache.avro:avro:1.11.3'
+  implementation 'org.apache.parquet:parquet-avro:1.14.0'
+  
+  testImplementation platform('org.junit:junit-bom:5.9.1')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.register('genAvroTypes') {
+  doFirst {
+    exec {
+      commandLine "${project.projectDir}/mkavro.sh"
+    }
+  }
+}
+
+compileJava.dependsOn(genAvroTypes)
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  google()
+}
+
+test {
+  useJUnitPlatform()
+}

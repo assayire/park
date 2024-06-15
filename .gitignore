@@ -1,0 +1,11 @@
+.idea
+.vscode
+.fleet
+
+.gradle
+build
+logs
+
+*.iml
+
+.DS_Store
