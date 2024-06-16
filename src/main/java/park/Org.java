@@ -1,5 +1,6 @@
 package park;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import park.avro.Attribute;
 import park.avro.Organization;
 import park.avro.OrganizationType;
@@ -15,11 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public record Org(
-    String name,
-    String category,
-    String country,
-    Type type,
-    List<Attr> attributes
+    String name
+    , String category
+    , String country
+    , Type type
+    , List<Attr> attributes
 ) {
   public Organization toAvro() {
     return Organization.newBuilder()
