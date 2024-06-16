@@ -1,5 +1,6 @@
 plugins {
   id 'java'
+  id 'application'
 }
 
 group = 'park'
@@ -37,6 +38,10 @@ tasks.register('genAvroTypes') {
 }
 
 compileJava.dependsOn(genAvroTypes)
+
+application {
+  mainClass = 'park.Runner'
+}
 
 repositories {
   mavenLocal()
