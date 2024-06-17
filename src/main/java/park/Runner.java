@@ -30,34 +30,34 @@ public class Runner {
 
   public static void main(String[] args) throws IOException {
     final var parquetFilePath = "build/out.parquet";
-
-    final var attr = new Attr(
-        "123",
-        BYTE_5,
-        BYTE_10,
-        true,
-        12.34,
-        SHORT_25
-    );
-
-    final var organizations = List.of(
-        new Org("A", "A1", "USA", Type.FOO, List.of(attr)),
-        new Org("B", "B1", "BSA", Type.FOO, List.of(attr)),
-        new Org("C", "C1", "CSA", Type.FOO, List.of(attr)),
-        new Org("D", "D1", "DSA", Type.FOO, List.of(attr)),
-        new Org("E", "E1", "ESA", Type.FOO, List.of(attr)),
-        new Org("F", "F1", "FSA", Type.FOO, List.of(attr))
-    );
+    final var organizations = getOrgs();
 
     saveParquet(organizations, parquetFilePath);
 
     System.err.println("Parquet file " + parquetFilePath + " saved successfully");
 
-    /*final var orgs = Runner.readOrganizations(parquetFilePath);
-    orgs.forEach(o -> System.err.println(o.getName()));*/
+    readOrganizations(parquetFilePath).forEach(System.out::println);
+    parseOrgs(parquetFilePath).forEach(System.out::println);
+  }
 
-    final var orgs = parseOrgs(parquetFilePath);
-    System.out.println(orgs.size());
+  private static List<Org> getOrgs() {
+    final var attr = new Attr(
+      "123",
+      BYTE_5,
+      BYTE_10,
+      true,
+      12.34,
+      SHORT_25
+    );
+
+    return List.of(
+      new Org("A", "A1", "USA", Type.FOO, List.of(attr)),
+      new Org("B", "B1", "BSA", Type.FOO, List.of(attr)),
+      new Org("C", "C1", "CSA", Type.FOO, List.of(attr)),
+      new Org("D", "D1", "DSA", Type.FOO, List.of(attr)),
+      new Org("E", "E1", "ESA", Type.FOO, List.of(attr)),
+      new Org("F", "F1", "FSA", Type.FOO, List.of(attr))
+    );
   }
 
   public static void saveParquet(List<Org> os, String outFilePath) throws IOException {
@@ -65,25 +65,25 @@ public class Runner {
 
     try (final var writer = avroParquetWriter(schema, outFilePath)) {
       Org
-          .toAvro(os)
-          .forEach(org -> {
-            try {
-              writer.write(org);
-            } catch (IOException e) {
-              throw new RuntimeException("Failed to write org: " + org.getName(), e);
-            }
-          });
+        .toAvro(os)
+        .forEach(org -> {
+          try {
+            writer.write(org);
+          } catch (IOException e) {
+            throw new RuntimeException("Failed to write org: " + org.getName(), e);
+          }
+        });
     }
   }
 
   public static <T> ParquetWriter<T> avroParquetWriter(Schema schema, String outFilePath) throws IOException {
     final var out = new LocalOutputFile(Path.of(outFilePath));
     return AvroParquetWriter
-        .<T>builder(out)
-        .withSchema(schema)
-        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-        .config(AvroWriteSupport.WRITE_OLD_LIST_STRUCTURE, "false")
-        .build();
+      .<T>builder(out)
+      .withSchema(schema)
+      .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+      .config(AvroWriteSupport.WRITE_OLD_LIST_STRUCTURE, "false")
+      .build();
   }
 
   // region Many different ways of reading the parquet file
@@ -91,10 +91,10 @@ public class Runner {
   public static List<Organization> readOrganizations(String parquetFilePath) throws IOException {
     final var in = new LocalInputFile(Path.of(parquetFilePath));
     try (
-        final var reader = AvroParquetReader
-            .<Organization>builder(in)
-            .withConf(new PlainParquetConfiguration())
-            .build()
+      final var reader = AvroParquetReader
+        .<Organization>builder(in)
+        .withConf(new PlainParquetConfiguration())
+        .build()
     ) {
       final var organizations = new ArrayList<Organization>();
       Organization next;
@@ -108,11 +108,11 @@ public class Runner {
   @SuppressWarnings("unchecked")
   public static List<Org> readOrgList(String parquetFilePath) throws IOException {
     try (
-        final ParquetReader<GenericRecord> reader =
-            AvroParquetReader
-                .<GenericRecord>builder(new LocalInputFile(Path.of(parquetFilePath)))
-                .withConf(new PlainParquetConfiguration())
-                .build()
+      final ParquetReader<GenericRecord> reader =
+        AvroParquetReader
+          .<GenericRecord>builder(new LocalInputFile(Path.of(parquetFilePath)))
+          .withConf(new PlainParquetConfiguration())
+          .build()
     ) {
       final List<Org> organizations = new ArrayList<>();
       GenericRecord record;
@@ -120,17 +120,17 @@ public class Runner {
         final var attrsRecords = (List<GenericRecord>) record.get("attributes");
 
         final var attrs =
-            attrsRecords
-                .stream()
-                .map(attr -> new Attr(
-                    attr.get("id").toString(),
-                    ((Integer) attr.get("quantity")).byteValue(),
-                    ((Integer) attr.get("amount")).byteValue(),
-                    (boolean) attr.get("active"),
-                    (double) attr.get("percent"),
-                    ((Integer) attr.get("size")).shortValue())
-                )
-                .toList();
+          attrsRecords
+            .stream()
+            .map(attr -> new Attr(
+              attr.get("id").toString(),
+              ((Integer) attr.get("quantity")).byteValue(),
+              ((Integer) attr.get("amount")).byteValue(),
+              (boolean) attr.get("active"),
+              (double) attr.get("percent"),
+              ((Integer) attr.get("size")).shortValue())
+            )
+            .toList();
 
         final Utf8 name = (Utf8) record.get("name");
         final Utf8 category = (Utf8) record.get("category");
@@ -138,13 +138,13 @@ public class Runner {
         final Type type = Type.valueOf(record.get("organizationType").toString());
 
         organizations.add(
-            new Org(
-                name.toString()
-                , category.toString()
-                , country.toString()
-                , type
-                , attrs
-            )
+          new Org(
+            name.toString()
+            , category.toString()
+            , country.toString()
+            , type
+            , attrs
+          )
         );
       }
 
@@ -166,13 +166,14 @@ public class Runner {
 
   public static List<Org> parseOrgs(String parquetFilePath) throws IOException {
     final var orgsSchema =
-        SchemaBuilder
-            .record("Organizations")
-            .fields()
-            .requiredString("name")
-            .requiredString("category")
-            .requiredString("country")
-            .endRecord();
+      SchemaBuilder
+        .record("Organizations")
+        .fields()
+        .requiredString("name")
+        .requiredString("category")
+        .requiredString("country")
+        .requiredString("organizationType")
+        .endRecord();
 
     final var configuration = new Configuration();
     configuration.set(AVRO_REQUESTED_PROJECTION, orgsSchema.toString());
@@ -180,23 +181,25 @@ public class Runner {
     final var inputFile = new LocalInputFile(Path.of(parquetFilePath));
 
     try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(inputFile)
-        .withConf(configuration)
-        .build()) {
+      .withConf(configuration)
+      .build()) {
       final List<Org> organizations = new ArrayList<>();
       GenericRecord record;
 
       while ((record = reader.read()) != null) {
-        Utf8 name = (Utf8) record.get("name");
-        Utf8 category = (Utf8) record.get("category");
-        Utf8 country = (Utf8) record.get("country");
+        final var name = (Utf8) record.get("name");
+        final var category = (Utf8) record.get("category");
+        final var country = (Utf8) record.get("country");
+        final var type = Type.valueOf(record.get("organizationType").toString());
+
         organizations.add(
-            new Org(
-                name.toString(),
-                category.toString(),
-                country.toString(),
-                null,
-                null
-            )
+          new Org(
+            name.toString(),
+            category.toString(),
+            country.toString(),
+            type,
+            null
+          )
         );
       }
 

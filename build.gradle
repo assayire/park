@@ -15,9 +15,9 @@ sourceSets {
 }
 
 dependencies {
-  implementation 'org.apache.parquet:parquet-avro:1.14.0'
-  implementation 'org.apache.parquet:parquet-common:1.14.0'
-  implementation 'org.apache.parquet:parquet-hadoop:1.14.0'
+  implementation 'org.apache.parquet:parquet-avro:1.14.1'
+  implementation 'org.apache.parquet:parquet-common:1.14.1'
+  implementation 'org.apache.parquet:parquet-hadoop:1.14.1'
 
   implementation 'org.apache.avro:avro:1.11.3'
   implementation 'org.apache.hadoop:hadoop-common:3.1.2'
