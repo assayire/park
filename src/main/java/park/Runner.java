@@ -1,7 +1,9 @@
 package park;
 
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.avro.AvroParquetReader;
 import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.hadoop.ParquetReader;
@@ -18,6 +20,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.parquet.avro.AvroReadSupport.AVRO_REQUESTED_PROJECTION;
 
 public class Runner {
   private static final byte BYTE_5 = 5;
@@ -49,8 +53,11 @@ public class Runner {
 
     System.err.println("Parquet file " + parquetFilePath + " saved successfully");
 
-    final var orgs = Runner.readOrganizations(parquetFilePath);
-    orgs.forEach(o -> System.err.println(o.getName()));
+    /*final var orgs = Runner.readOrganizations(parquetFilePath);
+    orgs.forEach(o -> System.err.println(o.getName()));*/
+
+    final var orgs = parseOrgs(parquetFilePath);
+    System.out.println(orgs.size());
   }
 
   public static void saveParquet(List<Org> os, String outFilePath) throws IOException {
@@ -78,6 +85,8 @@ public class Runner {
         .config(AvroWriteSupport.WRITE_OLD_LIST_STRUCTURE, "false")
         .build();
   }
+
+  // region Many different ways of reading the parquet file
 
   public static List<Organization> readOrganizations(String parquetFilePath) throws IOException {
     final var in = new LocalInputFile(Path.of(parquetFilePath));
@@ -154,4 +163,46 @@ public class Runner {
       return objects;
     }
   }
+
+  public static List<Org> parseOrgs(String parquetFilePath) throws IOException {
+    final var orgsSchema =
+        SchemaBuilder
+            .record("Organizations")
+            .fields()
+            .requiredString("name")
+            .requiredString("category")
+            .requiredString("country")
+            .endRecord();
+
+    final var configuration = new Configuration();
+    configuration.set(AVRO_REQUESTED_PROJECTION, orgsSchema.toString());
+
+    final var inputFile = new LocalInputFile(Path.of(parquetFilePath));
+
+    try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(inputFile)
+        .withConf(configuration)
+        .build()) {
+      final List<Org> organizations = new ArrayList<>();
+      GenericRecord record;
+
+      while ((record = reader.read()) != null) {
+        Utf8 name = (Utf8) record.get("name");
+        Utf8 category = (Utf8) record.get("category");
+        Utf8 country = (Utf8) record.get("country");
+        organizations.add(
+            new Org(
+                name.toString(),
+                category.toString(),
+                country.toString(),
+                null,
+                null
+            )
+        );
+      }
+
+      return organizations;
+    }
+  }
+
+  // endregion
 }
